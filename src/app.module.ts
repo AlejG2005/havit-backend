@@ -11,14 +11,17 @@ import { ChallengesModule } from './challenges/challenges.module';
 
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule, AuthModule, UsersModule, ChallengesModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
         schema: 'havit',
         synchronize: false,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
-      inject: [ConfigService],
     }),
   ],
 })
