@@ -18,11 +18,13 @@ import { ChallengesModule } from './challenges/challenges.module';
         autoLoadEntities: true,
         schema: 'havit',
         synchronize: false,
-        ssl: {
-          rejectUnauthorized: false,
+        extra: {
+          ssl: {
+            rejectUnauthorized: false,
+          },
         },
       }),
     }),
   ],
 })
-export class AppModule {}
+export class AppModule { }
