@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException} from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 import { LoginDto } from './dto/login.dto';
@@ -11,7 +11,7 @@ export class AuthService {
 
   constructor(
     private configService: ConfigService,
-    private usersService: UsersService, 
+    private usersService: UsersService,
   ) {
     this.supabase = createClient(
       this.configService.getOrThrow<string>('SUPABASE_URL'),
@@ -20,24 +20,33 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    console.log("LOGIN HIT"); // 👈 DEBUG
+
     const { email, password } = loginDto;
 
-    const { data, error } = await this.supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      throw new UnauthorizedException('Invalid email or password');
+      console.log("SUPABASE RESPONSE:", data, error); // 👈 DEBUG
+
+      if (error) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      return {
+        accessToken: data.session.access_token,
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+        },
+      };
+    } catch (err) {
+      console.error("LOGIN ERROR:", err); // 👈 CLAVE
+      throw new UnauthorizedException('Login failed');
     }
-
-    return {
-      accessToken: data.session.access_token,
-      user: {
-        id: data.user.id,
-        email: data.user.email,
-      },
-    };
   }
 
   async register(regisDto: RegisterDto) {
@@ -49,8 +58,8 @@ export class AuthService {
     });
 
     if (error) {
-    console.log(error);
-    throw new BadRequestException(error.message);
+      console.log(error);
+      throw new BadRequestException(error.message);
     }
 
     if (!data.user) {
@@ -61,10 +70,10 @@ export class AuthService {
 
     try {
       const createdUser = await this.usersService.register(
-          { username: regisDto.username },
-      data.user.id,
-      data.user.email,
-    );
+        { username: regisDto.username },
+        data.user.id,
+        data.user.email,
+      );
 
       return {
         message: 'User registered successfully',
